@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana 批量余额查询</title>
+    <title>Solana 批量余额查询 (夜间模式)</title>
     <style>
         body {
             font-family: sans-serif;
@@ -11,27 +11,33 @@
             padding: 20px;
             max-width: 800px;
             margin: 0 auto;
-            background-color: #f4f4f4;
-            color: #333;
+            /* --- 夜间模式改动 --- */
+            background-color: #282c34; /* 深灰背景 */
+            color: #e0e0e0; /* 浅灰文字 */
         }
         h1 {
             text-align: center;
-            color: #5e35b1; /* Solana 紫色系 */
+            color: #bb86fc; /* 调整为更亮的紫色，适合深色背景 */
         }
-        textarea {
+        textarea, input[type="text"], select {
             width: 100%;
-            min-height: 150px;
             margin-bottom: 15px;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #555; /* 深色边框 */
             border-radius: 4px;
-            box-sizing: border-box; /* 防止 padding 影响总宽度 */
+            box-sizing: border-box;
+            /* --- 夜间模式改动 --- */
+            background-color: #3a3f4a; /* 稍浅的深灰背景 */
+            color: #e0e0e0; /* 浅灰文字 */
+        }
+        textarea {
+             min-height: 150px;
         }
         button {
             display: block;
             width: 100%;
             padding: 12px 20px;
-            background-color: #5e35b1; /* Solana 紫色系 */
+            background-color: #6200ee; /* 保持或调整紫色 */
             color: white;
             border: none;
             border-radius: 4px;
@@ -40,81 +46,91 @@
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #4527a0;
+            background-color: #3700b3; /* 深一点的紫色 */
         }
         button:disabled {
-            background-color: #ccc;
+            background-color: #555; /* 深灰色禁用背景 */
+            color: #999; /* 灰色禁用文字 */
             cursor: not-allowed;
         }
         #resultsTable {
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            /* --- 夜间模式改动 --- */
+            background-color: #3a3f4a; /* 表格背景 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4); /* 深色阴影 */
         }
         #resultsTable th, #resultsTable td {
-            border: 1px solid #ddd;
+             /* --- 夜间模式改动 --- */
+            border: 1px solid #555; /* 深色边框 */
             padding: 10px;
             text-align: left;
         }
         #resultsTable th {
-            background-color: #ede7f6; /* 淡紫色 */
-            color: #333;
+             /* --- 夜间模式改动 --- */
+            background-color: #4a4f5a; /* 表头背景 */
+            color: #e0e0e0; /* 表头文字 */
         }
-        #resultsTable td:nth-child(2) { /* 余额列右对齐 */
+         /* --- 修改：序号列居中，地址列保持左对齐，余额列右对齐 --- */
+        #resultsTable td:nth-child(1), #resultsTable th:nth-child(1) { /* 序号列 */
+             text-align: center;
+             width: 50px; /* 给序号列一个固定宽度 */
+         }
+        #resultsTable td:nth-child(3) { /* 余额列 (现在是第3列) */
             text-align: right;
         }
         .error-message {
-            color: #d32f2f; /* 红色 */
+             /* --- 夜间模式改动 --- */
+            color: #f44336; /* 亮红色错误信息 */
             font-style: italic;
         }
         #loadingIndicator {
             text-align: center;
             margin-top: 15px;
             font-weight: bold;
-            color: #555;
+             /* --- 夜间模式改动 --- */
+            color: #aaa; /* 加载提示文字颜色 */
             display: none; /* 初始隐藏 */
         }
         #summary {
             margin-top: 20px;
             padding: 15px;
-            background-color: #e8eaf6; /* 淡蓝色 */
+             /* --- 夜间模式改动 --- */
+            background-color: #3a3f4a; /* 摘要背景 */
             border-radius: 4px;
-            border: 1px solid #c5cae9;
+            border: 1px solid #555; /* 摘要边框 */
         }
          #summary p {
             margin: 5px 0;
          }
-         #rpcSelector {
-             margin-bottom: 15px;
-             padding: 10px;
-             width: 100%;
-             border: 1px solid #ccc;
-             border-radius: 4px;
-             background-color: white;
+         label { /* --- 新增：确保标签文字也是浅色 --- */
+            color: #e0e0e0;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
          }
-         label[for="rpcSelector"] {
-             display: block;
-             margin-bottom: 5px;
-             font-weight: bold;
-         }
+        #customRpcUrl {
+            margin-top: 5px;
+            padding: 8px;
+        }
+
     </style>
 </head>
 <body>
 
     <h1>Solana (SOL) 批量余额查询</h1>
 
-    <label for="rpcSelector">选择 RPC 节点:</label>
+    <!-- ========== RPC 选择器修改部分 ========== -->
+    <label for="rpcSelector">选择或输入 RPC 节点:</label>
     <select id="rpcSelector">
-        <option value="https://api.mainnet-beta.solana.com" selected>Solana 公共节点 (可能有速率限制)</option>
-        <option value="https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY">Helius (需要替换API Key)</option>
-        <option value="https://try-rpc.mainnet.solana.blockdaemon.tech/">Blockdaemon 公共节点</option>
-        <option value="https://solana-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY">Alchemy (需要替换API Key)</option>
-        <!-- 可以添加更多公共或私有节点 -->
+        <!-- 只保留指定的 Alchemy 节点和自定义选项 -->
+        <option value="https://solana-mainnet.g.alchemy.com/v2/gksCZLb4yjTXpUsnf1NTCoaV5WSUjr5y" selected>Alchemy 节点</option>
         <option value="custom">自定义 RPC URL</option>
     </select>
-    <input type="text" id="customRpcUrl" placeholder="输入自定义 RPC URL" style="display: none; width: 100%; margin-top: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+    <!-- 自定义输入框保持不变，初始隐藏 -->
+    <input type="text" id="customRpcUrl" placeholder="输入自定义 RPC URL" style="display: none; width: 100%;">
+    <!-- ========== RPC 选择器修改结束 ========== -->
 
 
     <label for="solanaAddresses">输入 Solana 地址 (每行一个):</label>
@@ -135,6 +151,8 @@
     <table id="resultsTable" style="display: none;">
         <thead>
             <tr>
+                <!-- 增加序号列标题 -->
+                <th>#</th>
                 <th>地址</th>
                 <th>余额 (SOL)</th>
             </tr>
@@ -147,7 +165,7 @@
     <!-- 引入 Solana Web3.js 库 (使用 CDN) -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script>
-        // 访问全局的 solanaWeb3 对象 (通过上面的 CDN 脚本引入)
+        // 访问全局的 solanaWeb3 对象
        //const solanaWeb3 = window.solanaWeb3;
 
         const checkBalanceBtn = document.getElementById('checkBalanceBtn');
@@ -163,7 +181,7 @@
         const rpcSelector = document.getElementById('rpcSelector');
         const customRpcUrlInput = document.getElementById('customRpcUrl');
 
-        // 处理 RPC 选择器变化
+        // 处理 RPC 选择器变化 (无需修改)
         rpcSelector.addEventListener('change', function() {
             if (this.value === 'custom') {
                 customRpcUrlInput.style.display = 'block';
@@ -174,14 +192,13 @@
         });
 
         checkBalanceBtn.addEventListener('click', async () => {
-            // 禁用按钮并显示加载指示器
             checkBalanceBtn.disabled = true;
             loadingIndicator.style.display = 'block';
-            resultsTable.style.display = 'none'; // 隐藏旧结果
-            summaryDiv.style.display = 'none';  // 隐藏旧摘要
-            resultsBody.innerHTML = ''; // 清空旧结果
+            resultsTable.style.display = 'none';
+            summaryDiv.style.display = 'none';
+            resultsBody.innerHTML = '';
 
-            // 获取选择的或自定义的 RPC URL
+            // 获取选择的或自定义的 RPC URL (无需修改)
             let rpcUrl = rpcSelector.value;
             if (rpcUrl === 'custom') {
                 rpcUrl = customRpcUrlInput.value.trim();
@@ -191,7 +208,6 @@
                     checkBalanceBtn.disabled = false;
                     return;
                 }
-                 // 基本 URL 验证 (可以更复杂)
                 if (!rpcUrl.startsWith('http://') && !rpcUrl.startsWith('https://')) {
                      alert('自定义 RPC URL 格式无效，应以 http:// 或 https:// 开头');
                      loadingIndicator.style.display = 'none';
@@ -200,34 +216,39 @@
                  }
             }
 
-             // 检查是否需要替换 API Key 占位符
+             // 检查占位符 API Key 的逻辑可以保留，虽然现在默认的不是占位符了
              if (rpcUrl.includes('YOUR_') && rpcUrl.includes('_API_KEY')) {
-                alert(`请将 RPC URL "${rpcUrl}" 中的占位符替换为您自己的 API Key，或者选择一个公共节点。`);
+                alert(`请将 RPC URL "${rpcUrl}" 中的占位符替换为您自己的 API Key，或者选择其他节点。`);
                 loadingIndicator.style.display = 'none';
                 checkBalanceBtn.disabled = false;
                 return;
             }
 
-
-            // 创建 Solana 连接
+            // 创建 Solana 连接 (无需修改)
             let connection;
             try {
                  connection = new solanaWeb3.Connection(rpcUrl, 'confirmed');
-                 // 尝试 ping 一下确认连接
-                 await connection.getEpochInfo();
+                 await connection.getEpochInfo(); // 尝试连接测试
             } catch (error) {
                 console.error("连接 RPC 节点失败:", error);
-                alert(`无法连接到 RPC 节点 ${rpcUrl}。请检查 URL 或选择其他节点。\n错误: ${error.message}`);
+                // 改进错误提示，区分连接失败和获取信息失败
+                let alertMessage = `无法连接到 RPC 节点 ${rpcUrl}。请检查 URL 或选择其他节点。`;
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    alertMessage += "\n原因：网络请求失败，可能是 CORS 策略阻止、网络中断或 RPC 地址无效。请检查浏览器控制台获取详细信息。";
+                } else {
+                    alertMessage += `\n错误: ${error.message}`;
+                }
+                alert(alertMessage);
                 loadingIndicator.style.display = 'none';
                 checkBalanceBtn.disabled = false;
                 return;
             }
 
-
+            // 获取地址列表 (无需修改)
             const addresses = solanaAddressesTextArea.value
-                .split('\n')                   // 按行分割
-                .map(addr => addr.trim())      // 去除首尾空格
-                .filter(addr => addr !== ''); // 过滤空行
+                .split('\n')
+                .map(addr => addr.trim())
+                .filter(addr => addr !== '');
 
             if (addresses.length === 0) {
                 alert('请输入至少一个 Solana 地址。');
@@ -236,27 +257,26 @@
                 return;
             }
 
-            // 设置最大并发数，防止瞬间请求过多打爆公共节点
-            const MAX_CONCURRENT_REQUESTS = 10;
+            // --- 查询逻辑 (包含序号) ---
+            const MAX_CONCURRENT_REQUESTS = 10; // 可以根据 RPC 节点调整
             let results = [];
             let totalSol = 0;
             let validCount = 0;
             let errorCount = 0;
+            let rowIndex = 1; // 初始化行号计数器
 
             console.log(`开始查询 ${addresses.length} 个地址... 使用 RPC: ${rpcUrl}`);
 
-            // 分批处理地址查询
             for (let i = 0; i < addresses.length; i += MAX_CONCURRENT_REQUESTS) {
                 const batch = addresses.slice(i, i + MAX_CONCURRENT_REQUESTS);
                 console.log(`处理批次 ${Math.floor(i / MAX_CONCURRENT_REQUESTS) + 1}, 地址数: ${batch.length}`);
 
                 const batchPromises = batch.map(async (address) => {
                     try {
-                        // 初步校验地址格式 (可选，但有帮助)
+                        // 初步格式校验
                         if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
                              throw new Error('格式无效');
                         }
-
                         const publicKey = new solanaWeb3.PublicKey(address);
                         const balanceLamports = await connection.getBalance(publicKey);
                         const balanceSol = balanceLamports / solanaWeb3.LAMPORTS_PER_SOL;
@@ -264,14 +284,17 @@
                     } catch (error) {
                         console.error(`查询地址 ${address} 出错:`, error);
                         let errorMessage = '查询失败';
-                         // 尝试识别特定错误
+                        // 尝试识别特定错误
                         if (error.message.toLowerCase().includes('invalid public key') || error.message === '格式无效') {
                             errorMessage = '无效地址';
+                        } else if (error.message.includes('403') || error.message.toLowerCase().includes('forbidden')) {
+                            errorMessage = '访问被拒绝 (403)，检查API Key或来源权限';
                         } else if (error.message.includes('429') || error.message.toLowerCase().includes('rate limit')) {
-                             errorMessage = '速率限制，请稍后再试或更换节点';
-                        } else if (error instanceof TypeError) {
-                            // 可能由 new PublicKey() 抛出
-                             errorMessage = '无效地址格式';
+                             errorMessage = '速率限制 (429)，请减少并发或稍后再试';
+                        } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                             errorMessage = '网络请求失败 (CORS?)';
+                         } else if (error instanceof solanaWeb3.SolanaJSONRPCError) { // 捕获 RPC 返回的错误
+                             errorMessage = `RPC 错误: ${error.message} (Code: ${error.code})`;
                          }
                         return { address: address, balance: null, error: errorMessage };
                     }
@@ -282,13 +305,16 @@
 
                 // 处理批次结果
                  batchResults.forEach(result => {
+                     const row = resultsBody.insertRow(); // 先创建行
+                     const cell0 = row.insertCell(0); // 序号单元格
+                     const cell1 = row.insertCell(1); // 地址单元格
+                     const cell2 = row.insertCell(2); // 余额/错误单元格
+                     cell0.textContent = rowIndex; // 填充序号
+
                      if (result.status === 'fulfilled') {
                          const data = result.value;
                          results.push(data); // 添加到总结果列表
-                         const row = resultsBody.insertRow();
-                         const cell1 = row.insertCell(0);
-                         const cell2 = row.insertCell(1);
-                         cell1.textContent = data.address;
+                         cell1.textContent = data.address; // 填充地址
                          if (data.error) {
                              cell2.innerHTML = `<span class="error-message">${data.error}</span>`;
                              errorCount++;
@@ -298,33 +324,31 @@
                              validCount++;
                          }
                      } else {
-                         // Promise.allSettled 捕获了未预料的错误（理论上不应该发生，因为内部有try/catch）
+                         // Promise.allSettled 捕获了未预料的错误
                          console.error("一个未捕获的查询错误:", result.reason);
-                         // 可以在这里添加一个通用错误行，但通常内部的 try/catch 应该处理了
-                         const failedAddress = batch.find(addr => !results.some(r => r.address === addr)); // 尝试找到哪个地址失败了
-                         if(failedAddress) {
-                             const row = resultsBody.insertRow();
-                             row.insertCell(0).textContent = failedAddress;
-                             row.insertCell(1).innerHTML = `<span class="error-message">未知查询错误</span>`;
-                             errorCount++;
-                         }
+                         // 尝试从原始批次中找到对应地址
+                         const failedAddressGuess = batch[batchResults.indexOf(result)]; // 根据索引猜测
+                         cell1.textContent = failedAddressGuess || '未知地址'; // 填充地址或占位符
+                         cell2.innerHTML = `<span class="error-message">未知JS错误: ${result.reason?.message || 'N/A'}</span>`;
+                         errorCount++;
                      }
+                      // 递增行号计数器
+                     rowIndex++;
                  });
 
-                // 如果地址数量多，可以在批次之间短暂暂停，进一步降低速率限制风险
+                // 如果地址数量多，可以在批次之间短暂暂停
                 if (addresses.length > MAX_CONCURRENT_REQUESTS && i + MAX_CONCURRENT_REQUESTS < addresses.length) {
                     await new Promise(resolve => setTimeout(resolve, 200)); // 暂停 200 毫秒
                 }
             }
 
-            // 更新摘要信息
+            // 更新摘要信息 (无需修改)
             totalAddressesEl.textContent = `总共查询地址数: ${addresses.length}`;
             validAddressesEl.textContent = `成功获取余额地址数: ${validCount}`;
             totalSolBalanceEl.textContent = `有效地址总余额: ${totalSol.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 9 })} SOL`;
             errorsCountEl.textContent = `查询失败/无效地址数: ${errorCount}`;
 
-
-            // 显示结果表格和摘要
+            // 显示结果 (无需修改)
             loadingIndicator.style.display = 'none';
             resultsTable.style.display = 'table'; // 显示表格
             summaryDiv.style.display = 'block'; // 显示摘要
